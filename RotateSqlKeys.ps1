@@ -7,7 +7,6 @@ $serverName = "SQLTEST"
 $databaseName = "AdventureWorks2019"
 $certThumbprint = "712961905b5c2e1915b135384aa5e7c49ad9ff59"
 $cmkName = "NewCMK1"
-$cekName = "NewCEK1"
 
 
 #Import the SQL Server PS module
@@ -20,11 +19,10 @@ $connStr = "Data Source=" + $serverName + ";Initial Catalog=" + $databaseName + 
 $database = Get-SqlDatabase -ConnectionString $connStr
 
 
-# Create CMK and CEK based off thumbprint
+# Create CMK based off thumbprint
 Write-Host "Creating new CMK and CEK (which will error if they exist)" -ForegroundColor Green
 $cmkSettings = New-SqlCertificateStoreColumnMasterKeySettings -CertificateStoreLocation "LocalMachine" -Thumbprint $certThumbprint
 New-SqlColumnMasterKey -Name $cmkName -InputObject $database -ColumnMasterKeySettings $cmkSettings
-New-SqlColumnEncryptionKey -Name $cekName  -InputObject $database -ColumnMasterKey $cmkName
 
 
 Pause
