@@ -5,11 +5,12 @@
 # Set Variables
 $serverName = "SQLTEST"
 $databaseName = "AdventureWorks2019"
-$certThumbprint = "712961905b5c2e1915b135384aa5e7c49ad9ff59"
-$cmkName = "NewCMK1"
+$certThumbprint = "712961905b5c2e1915b135384aa5e7c49ad9ff59" # Get this from the public cert
+$cmkName = "PublicKey" # Can be whatever you want the new cert to be called in CMK
 
 
-#Import the SQL Server PS module
+# Import the SQL Server PS module
+# If this fails then you are missing SQL Server Module. Run Install-Module -Name SqlServer
 Import-Module SqlServer
 
 
@@ -21,11 +22,13 @@ $database = Get-SqlDatabase -ConnectionString $connStr
 
 # Create CMK based off thumbprint
 Write-Host "Creating new CMK and CEK (which will error if they exist)" -ForegroundColor Green
-$cmkSettings = New-SqlCertificateStoreColumnMasterKeySettings -CertificateStoreLocation "LocalMachine" -Thumbprint $certThumbprint
+$cmkSettings = New-SqlCertificateStoreColumnMasterKeySettings -CertificateStoreLocation "CurrentUser" -Thumbprint $certThumbprint
 New-SqlColumnMasterKey -Name $cmkName -InputObject $database -ColumnMasterKeySettings $cmkSettings
 
 
+
 Pause
+
 
 
 # Get list of all CMK's that we'll rotate
@@ -33,6 +36,7 @@ $curKeys = Get-SqlColumnMasterKey -InputObject $database | Where {$_.Name -ne $c
 $curKeys = $curKeys -replace '[[\]]',''
 Write-Host "Current CMKs"  -ForegroundColor Green
 Write-Host $curKeys
+
 
 
 # Get list of all encrypted columns
@@ -48,6 +52,8 @@ for($i=0; $i -lt $tables.Count; $i++){
     }
 }
 
+
+
 # Start CMK Rotation
 Write-Host "Starting CMK rotation to" $cmkName -ForegroundColor Green
 ForEach ($curKey in $curKeys) {
@@ -56,6 +62,7 @@ ForEach ($curKey in $curKeys) {
 
 Write-Host "Key rotation invoked. Validate application before continuing" -ForegroundColor Green
 Pause
+
 
 
 # Complete CMK rotation
